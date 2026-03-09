@@ -97,9 +97,36 @@ export default function BookingModal({ professional, service, onClose, onSuccess
     if (isPast) return "past";
     const slots = slotsByDate[iso] || [];
     const booked = bookedByDate[iso] || [];
-    const freeSlots = slots.filter((s) => !booked.some((b) => b.time === s.time));
     if (slots.length === 0) return "no-slots";
-    if (freeSlots.length === 0) return "full";
+
+    // Duration-aware: megvizsgáljuk, van-e olyan szabad időpont ahol elég slot van
+    function getBlockedForDay(bookedAppts, allSlots) {
+      const blockedSet = new Set();
+      bookedAppts.forEach((appt) => {
+        const dur = appt.service?.duration || 30;
+        const needed = Math.ceil(dur / 30);
+        const sorted = allSlots.map((s) => s.time).sort();
+        const idx = sorted.indexOf(appt.time);
+        if (idx === -1) { blockedSet.add(appt.time); return; }
+        for (let i = 0; i < needed; i++) {
+          if (idx + i < sorted.length) blockedSet.add(sorted[idx + i]);
+        }
+      });
+      return blockedSet;
+    }
+
+    const blocked = getBlockedForDay(booked, slots);
+    const slotsNeeded = Math.ceil((service.duration || 30) / 30);
+    const sortedTimes = slots.map((s) => s.time).sort();
+
+    const hasFree = sortedTimes.some((time, idx) => {
+      if (blocked.has(time)) return false;
+      const needed = sortedTimes.slice(idx, idx + slotsNeeded);
+      if (needed.length < slotsNeeded) return false;
+      return needed.every((t) => !blocked.has(t));
+    });
+
+    if (!hasFree) return "full";
     return "has-slots";
   }
 
@@ -111,15 +138,57 @@ export default function BookingModal({ professional, service, onClose, onSuccess
     setSelectedTime(null);
   }
 
-  // Kiválasztott naphoz időpontok
+  // Kiválasztott naphoz időpontok – figyelembe veszi a szolgáltatás hosszát
   const daySlots = selectedDate ? (slotsByDate[selectedDate] || []) : [];
   const dayBooked = selectedDate ? (bookedByDate[selectedDate] || []) : [];
+
+  // Kiszámítjuk, hogy egy foglalás hány 30 perces slotot foglal el
+  function getBlockedTimes(bookedAppointments, slots) {
+    const blockedSet = new Set();
+    bookedAppointments.forEach((appt) => {
+      const apptDuration = appt.service?.duration || 30; // perc
+      const slotsNeeded = Math.ceil(apptDuration / 30);
+      const startTime = appt.time;
+      // megkeressük a slot indexét
+      const sortedTimes = slots.map((s) => s.time).sort();
+      const startIdx = sortedTimes.indexOf(startTime);
+      if (startIdx === -1) {
+        blockedSet.add(startTime);
+        return;
+      }
+      for (let i = 0; i < slotsNeeded; i++) {
+        if (startIdx + i < sortedTimes.length) {
+          blockedSet.add(sortedTimes[startIdx + i]);
+        }
+      }
+    });
+    return blockedSet;
+  }
+
+  // Kiszámítjuk, hogy az aktuális service hány slotot igényel
+  function getRequiredSlots(time, slots, duration) {
+    const slotsNeeded = Math.ceil((duration || 30) / 30);
+    const sortedTimes = slots.map((s) => s.time).sort();
+    const startIdx = sortedTimes.indexOf(time);
+    if (startIdx === -1) return [];
+    return sortedTimes.slice(startIdx, startIdx + slotsNeeded);
+  }
+
+  const blockedTimes = getBlockedTimes(dayBooked, daySlots);
+
+  // Egy időpont szabad, ha: maga nincs foglalva ÉS a service által igényelt összes következő slot is szabad ÉS létezik
   const freeTimes = daySlots
-    .filter((s) => !dayBooked.some((b) => b.time === s.time))
     .map((s) => s.time)
-    .sort();
+    .sort()
+    .filter((time) => {
+      if (blockedTimes.has(time)) return false;
+      const needed = getRequiredSlots(time, daySlots, service.duration);
+      if (needed.length < Math.ceil((service.duration || 30) / 30)) return false; // nincs elég slot
+      return needed.every((t) => !blockedTimes.has(t));
+    });
+
   const bookedTimes = daySlots
-    .filter((s) => dayBooked.some((b) => b.time === s.time))
+    .filter((s) => blockedTimes.has(s.time))
     .map((s) => s.time)
     .sort();
 

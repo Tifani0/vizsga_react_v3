@@ -43,25 +43,35 @@ export function BookingProvider({ children }) {
   };
 
   const cancelAppointment = async (id) => {
-    const res = await fetch(`${API}/appointments/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "cancelled" }),
-    });
-    const updated = await res.json();
-    if (!res.ok) throw new Error(updated.error || "Lemondás sikertelen");
-    return updated;
+    try {
+      const res = await fetch(`${API}/appointments/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancelled" }),
+      });
+      const updated = await res.json();
+      if (!res.ok) throw new Error(updated.error || "Lemondás sikertelen");
+      setAppointments((prev) => prev.map((a) => a.id === id ? { ...a, ...updated } : a));
+      return updated;
+    } catch (e) {
+      throw new Error(e.message || "Lemondás sikertelen – ellenőrizd a kapcsolatot");
+    }
   };
 
   const updateAppointment = async (id, data) => {
-    const res = await fetch(`${API}/appointments/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    const updated = await res.json();
-    if (!res.ok) throw new Error(updated.error || "Frissítés sikertelen");
-    return updated;
+    try {
+      const res = await fetch(`${API}/appointments/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const updated = await res.json();
+      if (!res.ok) throw new Error(updated.error || "Frissítés sikertelen");
+      setAppointments((prev) => prev.map((a) => a.id === id ? { ...a, ...updated } : a));
+      return updated;
+    } catch (e) {
+      throw new Error(e.message || "Frissítés sikertelen – ellenőrizd a kapcsolatot");
+    }
   };
 
   const fetchAvailableSlots = async (providerId, date) => {

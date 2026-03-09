@@ -48,7 +48,7 @@ function ServiceFormModal({ service, userId, onClose, onSaved }) {
     setSaving(true);
     setError("");
     try {
-      const method = service ? "PATCH" : "POST";
+      const method = service ? "PUT" : "POST";
       const url = service ? `${API}/services/${service.id}` : `${API}/services`;
       const body = service
         ? { name, description, duration: Number(duration), price: Number(price) }
@@ -114,7 +114,7 @@ export default function AdminPage() {
   const { fetchAppointments, fetchAvailableSlots, addAvailableSlot, deleteAvailableSlot, updateAppointment, cancelAppointment } = useBooking();
 
   const TABS = isAdmin
-    ? ["appointments", "slots", "services", "users"]
+    ? ["appointments", "users"]
     : ["appointments", "slots", "services"];
 
   const [tab, setTab] = useState("appointments");
