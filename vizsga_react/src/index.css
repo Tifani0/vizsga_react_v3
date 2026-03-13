@@ -1452,3 +1452,8 @@ body {
 .alert { padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.87rem; margin-bottom: 1rem; }
 .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+
+
+.dashboard-about-text {
+  font-size: 0.9rem; color: var(--secondary-color); line-height: 1.6;
+}

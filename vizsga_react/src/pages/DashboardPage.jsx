@@ -66,28 +66,18 @@ function DashboardPage() {
           </div>
         </div>
       )}
-
-      {/* Gyors linkek */}
-      <div className="dashboard-quick-links">
-        <h2>Gyors elérés</h2>
-        <div className="quick-links-grid">
-          <a href="/szolgáltatások" className="quick-link-card">
-            <span className="quick-link-icon">💅</span>
-            <span className="quick-link-label">Szolgáltatások</span>
-          </a>
-          <a href="/foglalasaim" className="quick-link-card">
-            <span className="quick-link-icon">📅</span>
-            <span className="quick-link-label">Foglalásaim</span>
-          </a>
-          {(isProvider || isAdmin) && (
-            <a href="/admin" className="quick-link-card highlight">
-              <span className="quick-link-icon">{isAdmin ? "👑" : "🗂️"}</span>
-              <span className="quick-link-label">{isAdmin ? "Admin panel" : "Saját panel"}</span>
-            </a>
-          )}
-        </div>
+      <div>
+        <h1>Rólunk</h1>
+        <p className="dashboard-about-text">
+          Gáll Tifani és Balogh Kornélia Csilla mi vagyunk, a BookBeauty megalkotói. 
+          A BookBeauty egy innovatív online platform, amely összeköti a szépségipar szolgáltatóit és ügyfeleit.
+           Célunk, hogy megkönnyítsük a szalonok és szolgáltatók számára a foglalások kezelését,
+            miközben az ügyfelek számára egyszerű és gyors hozzáférést biztosítunk a legjobb szépségszolgáltatásokhoz.
+           Legyen szó hajvágásról, manikűrről vagy kozmetikáról, nálunk mindenki megtalálja a számára tökéletes szolgáltatást!
+        </p>
       </div>
-    </div>
+      
+        </div>
   );
 }
 
