@@ -122,11 +122,11 @@ function LoginPage() {
           Még nincs fiókod? <Link to="/register">Regisztrálj ingyen!</Link>
         </p>
         <p style={{ fontSize: "0.875rem", color: "#a10372" }}>
-            <strong>Teszt bejelentkezés:</strong>
+            <strong>Teszt bejelentkezés Adminként:</strong>
             <br />
-            Email: valami@gmail.com
+            Email: admin@bookbeauty.hu
             <br />
-            Jelszó: password123
+            Jelszó: Admin1234!
           </p>
       </div>
     </div>
