@@ -228,7 +228,18 @@ export default function AdminPage() {
       setSlots((prev) => prev.filter((s) => s.id !== slotId));
     } catch (e) { alert("Hiba: " + e.message); }
   }
-
+async function handleAddAllSlots() {
+  if (!window.confirm("Biztosan hozzáadod az összes időpontot erre a napra?")) return;
+  setAdding(true);
+  try {
+    const missing = ALL_TIMES.filter((time) => !slots.find((s) => s.time === time));
+    for (const time of missing) {
+      const newSlot = await addAvailableSlot(user.id, { date: selectedDate, time });
+      setSlots((prev) => [...prev, newSlot]);
+    }
+  } catch (e) { alert("Hiba: " + e.message); }
+  finally { setAdding(false); }
+}
   // ── Services ─────────────────────────────────────────────────────────────
 
   function handleServiceSaved(savedService, isEdit) {
@@ -418,6 +429,9 @@ export default function AdminPage() {
           </div>
           {slotLoading ? <div className="loading-state">Betöltés...</div> : (
             <>
+              <button className="btn-add-all-slots" onClick={handleAddAllSlots} disabled={adding || ALL_TIMES.every((t) => slots.find((s) => s.time === t))}
+>                   + Összes időpont hozzáadása
+              </button>
               <div className="slots-legend-admin">
                 <span><span className="legend-dot available"></span> Szabad</span>
                 <span><span className="legend-dot booked"></span> Foglalt</span>
