@@ -22,9 +22,13 @@ export default function ServicesHair() {
           <div className="professional-card" key={prof.id}>
             <div className="professional-card-header">
               <div className="professional-avatar">{prof.name?.charAt(0).toUpperCase()}</div>
+
               <div>
                 <h3 className="professional-name">{prof.name}</h3>
                 <span className="professional-type-badge ">Fodrász</span>
+                {prof.phonenumber && (
+                <a href={`tel:${prof.phonenumber}`} className="professional-phone">📞 {prof.phonenumber}</a>
+            )}
               </div>
             </div>
             <div className="services-list">

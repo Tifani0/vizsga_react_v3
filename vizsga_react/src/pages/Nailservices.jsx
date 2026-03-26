@@ -25,6 +25,9 @@ export default function ServicesNail() {
               <div>
                 <h3 className="professional-name">{prof.name}</h3>
                 <span className="professional-type-badge mukurmos">Műkörmös</span>
+                {prof.phonenumber && (
+                <a href={`tel:${prof.phonenumber}`} className="professional-phone">📞 {prof.phonenumber}</a>
+                )}
               </div>
             </div>
             <div className="services-list">

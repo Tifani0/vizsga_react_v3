@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useBooking } from "../contexts/BookingContext";
 import { useAuth } from "../contexts/AuthContext";
-
+const API = "http://localhost:3000";
 const STATUS_LABELS = {
   confirmed: { label: "Visszaigazolva", cls: "status-confirmed" },
   cancelled: { label: "Lemondva", cls: "status-cancelled" },
@@ -32,6 +32,16 @@ export default function MyAppointmentsPage() {
       setAppointments((prev) => prev.map((a) => a.id === id ? { ...a, ...updated } : a));
     } catch (e) { alert("Hiba: " + e.message); }
   }
+
+  async function handleDelete(id) {
+  if (!window.confirm("Biztosan törlöd ezt a foglalást?")) return;
+  try {
+    const res = await fetch(`${API}/appointments/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Törlés sikertelen");
+    setAppointments((prev) => prev.filter((a) => a.id !== id));
+  } catch (e) { alert("Hiba: " + e.message); }
+}
+
 
   const now = new Date();
   const filtered = appointments.filter((a) => {
@@ -96,6 +106,9 @@ export default function MyAppointmentsPage() {
                   {a.status === "confirmed" && !isPast && (
                     <button className="btn-cancel-appt" onClick={() => handleCancel(a.id)}>Lemondás</button>
                   )}
+                  {(a.status === "cancelled" || (isPast && a.status !== "confirmed")) && (
+                  <button className="btn-delete-appt" onClick={() => handleDelete(a.id)}>🗑️ Törlés</button>
+        )}
                 </div>
               </div>
             );

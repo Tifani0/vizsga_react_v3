@@ -17,6 +17,17 @@ function LoginPage() {
     const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  const [view, setView] = useState("login");
+const [forgotEmail, setForgotEmail] = useState("");
+const [resetCode, setResetCode] = useState("");
+const [generatedCode, setGeneratedCode] = useState("");
+const [newPassword, setNewPassword] = useState("");
+const [confirmNewPassword, setConfirmNewPassword] = useState("");
+const [forgotMsg, setForgotMsg] = useState("");
+const [forgotError, setForgotError] = useState("");
+const [forgotLoading, setForgotLoading] = useState(false);
+const API = "http://localhost:3000";
+
   // Ha már be van jelentkezve, irányítsuk a dashboard-ra
   useEffect(() => {
     if (isAuthenticated) {
@@ -71,6 +82,90 @@ function LoginPage() {
     }
   };
 
+  const handleRequestCode = async (e) => {
+  e.preventDefault();
+  setForgotError(""); setForgotMsg("");
+  if (!forgotEmail || !/\S+@\S+\.\S+/.test(forgotEmail)) { setForgotError("Adj meg egy érvényes email címet!"); return; }
+  setForgotLoading(true);
+  try {
+    const res = await fetch(`${API}/users`);
+    const users = await res.json();
+    const exists = users.find((u) => u.email === forgotEmail);
+    if (!exists) { setForgotError("Nem található felhasználó ezzel az email címmel."); return; }
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedCode(code);
+    setForgotMsg(`A kód: ${code} (valós alkalmazásban ezt emailben kapnád meg)`);
+    setView("reset");
+  } catch { setForgotError("Hiba történt, próbáld újra."); }
+  finally { setForgotLoading(false); }
+};
+
+const handleResetPassword = async (e) => {
+  e.preventDefault();
+  setForgotError("");
+  if (resetCode !== generatedCode) { setForgotError("Hibás kód! Kérj újat."); return; }
+  if (!newPassword || newPassword.length < 8) { setForgotError("A jelszónak legalább 8 karakter hosszúnak kell lennie."); return; }
+  if (newPassword !== confirmNewPassword) { setForgotError("A két jelszó nem egyezik."); return; }
+  setForgotLoading(true);
+  try {
+    const res = await fetch(`${API}/users/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: forgotEmail, newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) { setForgotError(data.error); return; }
+    setForgotMsg("Jelszó sikeresen megváltoztatva!");
+    setTimeout(() => { setView("login"); setForgotMsg(""); setForgotEmail(""); setResetCode(""); setNewPassword(""); setConfirmNewPassword(""); }, 2500);
+  } catch { setForgotError("Hiba történt, próbáld újra."); }
+  finally { setForgotLoading(false); }
+};
+
+if (view === "forgot") return (
+  <div className="page login-page">
+    <div className="login-container">
+      <h1>Jelszó visszaállítás</h1>
+      <p>Add meg az email címed és küldünk egy visszaállító kódot.</p>
+      {forgotError && <div className="alert alert-error">{forgotError}</div>}
+      {forgotMsg && <div className="alert alert-success">{forgotMsg}</div>}
+      <form className="login-form" onSubmit={handleRequestCode}>
+        <div className="form-group">
+          <label>Email cím</label>
+          <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="email@példa.hu" disabled={forgotLoading} />
+        </div>
+        <button type="submit" className="btn btn-primary" disabled={forgotLoading}>{forgotLoading ? "Küldés..." : "Kód kérése"}</button>
+      </form>
+      <button type="button" className="forgot-link" onClick={() => setView("login")}>← Vissza a bejelentkezéshez</button>
+    </div>
+  </div>
+);
+
+if (view === "reset") return (
+  <div className="page login-page">
+    <div className="login-container">
+      <h1>Új jelszó beállítása</h1>
+      {forgotError && <div className="alert alert-error">{forgotError}</div>}
+      {forgotMsg && <div className="alert alert-success">{forgotMsg}</div>}
+      <form className="login-form" onSubmit={handleResetPassword}>
+        <div className="form-group">
+          <label>Visszaállító kód</label>
+          <input type="text" value={resetCode} onChange={(e) => setResetCode(e.target.value)} placeholder="6 jegyű kód" disabled={forgotLoading} />
+        </div>
+        <div className="form-group">
+          <label>Új jelszó</label>
+          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Legalább 8 karakter" disabled={forgotLoading} />
+        </div>
+        <div className="form-group">
+          <label>Új jelszó megerősítése</label>
+          <input type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} placeholder="Jelszó újra" disabled={forgotLoading} />
+        </div>
+        <button type="submit" className="btn btn-primary" disabled={forgotLoading}>{forgotLoading ? "Mentés..." : "Jelszó megváltoztatása"}</button>
+      </form>
+      <button type="button" className="forgot-link" onClick={() => setView("forgot")}>← Új kód kérése</button>
+    </div>
+  </div>
+);
+
   return (
    <div className="page login-page">
       <div className="login-container">
@@ -114,6 +209,9 @@ function LoginPage() {
               <span className="error-text">{errors.password}</span>
             )}
           </div>
+          <button type="button" className="forgot-link" onClick={() => { setView("forgot"); setForgotError(""); setForgotMsg(""); }}>
+          Elfelejtettem a jelszavam
+          </button>
           <button type="submit" className="btn btn-primary" disabled={loading}>
             {loading ? "Bejelentkezés..." : "Bejelentkezés"}
           </button>
